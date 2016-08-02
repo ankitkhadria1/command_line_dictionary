@@ -1,4 +1,5 @@
 var request = require('request');
+var async = require('async');
 var myArgs = process.argv.slice(2);
 var API_END_POINT = 'http://api.wordnik.com:80/v4/word.json/'
 var ACCESS_TOKEN = 'a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
@@ -49,10 +50,17 @@ else if(myArgs[0]=='./dict')
 			console.log("...............",myArgs[1]);
 			break;
 		case myArgs[1]:
-			console.log(".................",myArgs[1]);
+			console.log(".........5454........",myArgs[1]);
 			break;
 		default :
-			console.log("WORD OF THE DAY");
+			wordOfTheDay(function(err,result)
+			{
+				if(err)
+					console.log(err);
+				else{
+					console.log(result);
+				}
+			})
 	}
 }
 
@@ -131,4 +139,71 @@ function getExample(word,callback)
 			callback(null,def[0].text);
 		}
 	})
+}
+function wordOfTheDay(callback)
+{
+	var date = new Date();
+   date =  date.getFullYear()+'-' + (date.getMonth()+1) + '-'+date.getDate();//prints expected format.
+	var resource = 'http://api.wordnik.com:80/v4/word.json/'+date+'/wordOfTheDay?api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5';
+	callApi(resource,function(error,result)
+	{
+		if(error)
+			callback(error);
+		else{
+			var data={};
+			var def = JSON.parse(result);
+			def = def.examples;
+			data.examples = def[0].text;
+			var word = def.word;
+			async.auto({
+				example:function(cb)
+				{
+					getExample(word,function(err,result)
+					{
+						if(err)
+							cb(err);
+						else{
+							data.example=result;
+							cb(null);
+						}
+
+					})
+				},
+				definition:function(cb)
+				{
+					getDefinitions(word,function(err,result)
+					{
+						if(err)
+							cb(err);
+						else{
+							data.definition = result;
+							cb(null);
+						}
+					})
+				},
+				relatedAt:function(cb)
+				{
+					getRelatedWord(word,function(err,result)
+					{
+						if(err)
+							cb(err);
+						else{
+							data.synonym=result;
+							cb(null);
+						}
+					})
+				}
+
+			},function(err,response)
+			{
+				if(err)
+					callback(err);
+				else
+					callback(null,ata);
+
+			})
+			
+		}
+	})
+
 }
