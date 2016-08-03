@@ -50,7 +50,13 @@ else if(myArgs[0]=='./dict')
 			console.log("...............",myArgs[1]);
 			break;
 		case myArgs[1]:
-			console.log(".........5454........",myArgs[1]);
+			allFunction(myArgs[1],function(err,result)
+			{
+				if(err)
+					console.log(err);
+				else
+					console.log(result);
+			})
 			break;
 		default :
 			wordOfTheDay(function(err,result)
@@ -155,41 +161,56 @@ function wordOfTheDay(callback)
 			def = def.examples;
 			data.examples = def[0].text;
 			var word = def.word;
-			async.auto({
-				example:function(cb)
+			affFunction(word,function(err,response)
+			{
+				if(err)
+					callback(err);
+				else
+					callback(null,response);
+			})
+						
+		}
+	})
+
+}
+
+function allFunction(word,callback)
+{
+	async.auto({
+				example:function(callback)
 				{
 					getExample(word,function(err,result)
 					{
 						if(err)
-							cb(err);
+							callback(err);
 						else{
 							data.example=result;
-							cb(null);
+							callback(null);
 						}
 
 					})
 				},
-				definition:function(cb)
+				definition:function(callback)
 				{
 					getDefinitions(word,function(err,result)
 					{
 						if(err)
-							cb(err);
+							callback(err);
 						else{
 							data.definition = result;
-							cb(null);
+							callback(null);
 						}
 					})
 				},
-				relatedAt:function(cb)
+				relatedAt:function(callback)
 				{
 					getRelatedWord(word,function(err,result)
 					{
 						if(err)
-							cb(err);
+							callback(err);
 						else{
 							data.synonym=result;
-							cb(null);
+							callback(null);
 						}
 					})
 				}
@@ -202,8 +223,6 @@ function wordOfTheDay(callback)
 					callback(null,ata);
 
 			})
-			
-		}
-	})
+
 
 }
